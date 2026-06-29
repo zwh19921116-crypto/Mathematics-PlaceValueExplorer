@@ -238,9 +238,12 @@ function createBlockRows(digits) {
   });
 }
 
-function updateExplorer(rawValue) {
+function updateExplorer(rawValue, options = {}) {
+  const { normalizeInput = false } = options;
   const value = parseInputValue(rawValue);
-  numberInput.value = decimalToggle.checked ? value.toFixed(DECIMAL_PRECISION) : String(Math.floor(value));
+  if (normalizeInput) {
+    numberInput.value = decimalToggle.checked ? value.toFixed(DECIMAL_PRECISION) : String(Math.floor(value));
+  }
 
   const digits = getDigitsByMode(value);
 
@@ -278,11 +281,15 @@ numberInput.addEventListener("input", (event) => {
   updateExplorer(event.target.value);
 });
 
+numberInput.addEventListener("blur", (event) => {
+  updateExplorer(event.target.value, { normalizeInput: true });
+});
+
 randomBtn.addEventListener("click", () => {
   const randomValue = decimalToggle.checked
     ? Math.round(Math.random() * (DECIMAL_SCALE - 1)) / DECIMAL_SCALE
     : randomInt(0, 9999999);
-  updateExplorer(randomValue);
+  updateExplorer(randomValue, { normalizeInput: true });
 });
 
 decimalToggle.addEventListener("change", () => {
@@ -293,8 +300,8 @@ decimalToggle.addEventListener("change", () => {
     numberInput.value = String(Math.floor(current));
   }
   syncModeUI();
-  updateExplorer(numberInput.value);
+  updateExplorer(numberInput.value, { normalizeInput: true });
 });
 
 syncModeUI();
-updateExplorer(numberInput.value);
+updateExplorer(numberInput.value, { normalizeInput: true });
