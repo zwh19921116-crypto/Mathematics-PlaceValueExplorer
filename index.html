@@ -33,9 +33,9 @@
         </p>
 
         <div class="control-panel">
-          <label for="numberInput">Enter a number (0 to 999,999)</label>
+          <label for="numberInput">Enter a number (0 to 9,999,999)</label>
           <div class="input-row">
-            <input id="numberInput" type="number" min="0" max="999999" value="482731" />
+            <input id="numberInput" type="number" min="0" max="9999999" value="7345621" />
             <button id="randomBtn" type="button">Random Number</button>
           </div>
         </div>
@@ -43,8 +43,8 @@
 
       <div class="hero-metric card-surface">
         <p class="metric-label">Current Number</p>
-        <p id="prettyNumber" class="metric-value">482,731</p>
-        <p id="numberWords" class="metric-words">Four hundred eighty-two thousand seven hundred thirty-one</p>
+        <p id="prettyNumber" class="metric-value">7,345,621</p>
+        <p id="numberWords" class="metric-words">Seven million three hundred forty-five thousand six hundred twenty-one</p>
       </div>
     </header>
 
@@ -52,10 +52,10 @@
       <section class="content-grid">
         <article class="card-surface" aria-labelledby="place-values-title">
           <div class="section-head">
-            <h2 id="place-values-title">Place Value Breakdown</h2>
-            <p>See each digit and its value.</p>
+            <h2 id="place-values-title">Place Value Table</h2>
+            <p>Like a classroom chart: columns, digits, and values.</p>
           </div>
-          <div id="placeCards" class="place-cards"></div>
+          <div id="placeTable" class="place-table" role="table" aria-label="Place value table"></div>
         </article>
 
         <article class="card-surface" aria-labelledby="expanded-title">
@@ -73,24 +73,6 @@
           <p>Each block is one digit at a place.</p>
         </div>
         <div id="blockRows" class="block-rows"></div>
-      </section>
-
-      <section class="card-surface quiz" aria-labelledby="quiz-title">
-        <div class="section-head">
-          <h2 id="quiz-title">Quick Challenge</h2>
-          <p>Can you identify a digit's value?</p>
-        </div>
-
-        <p id="quizQuestion" class="quiz-question"></p>
-        <div id="quizOptions" class="quiz-options" role="list"></div>
-
-        <div class="quiz-footer">
-          <p id="quizFeedback" class="quiz-feedback" aria-live="polite"></p>
-          <div class="quiz-actions">
-            <p id="quizScore" class="quiz-score">Score: 0</p>
-            <button id="nextQuizBtn" type="button">Next Question</button>
-          </div>
-        </div>
       </section>
     </main>
 

@@ -1,4 +1,5 @@
 const places = [
+  { label: "Millions", value: 1000000 },
   { label: "Hundred Thousands", value: 100000 },
   { label: "Ten Thousands", value: 10000 },
   { label: "Thousands", value: 1000 },
@@ -11,18 +12,9 @@ const numberInput = document.getElementById("numberInput");
 const randomBtn = document.getElementById("randomBtn");
 const prettyNumber = document.getElementById("prettyNumber");
 const numberWords = document.getElementById("numberWords");
-const placeCards = document.getElementById("placeCards");
+const placeTable = document.getElementById("placeTable");
 const expandedForm = document.getElementById("expandedForm");
 const blockRows = document.getElementById("blockRows");
-
-const quizQuestion = document.getElementById("quizQuestion");
-const quizOptions = document.getElementById("quizOptions");
-const quizFeedback = document.getElementById("quizFeedback");
-const quizScore = document.getElementById("quizScore");
-const nextQuizBtn = document.getElementById("nextQuizBtn");
-
-let score = 0;
-let currentQuiz = null;
 
 function clampToRange(value, min, max) {
   return Math.min(max, Math.max(min, value));
@@ -33,7 +25,7 @@ function formatNumber(value) {
 }
 
 function getDigits(value) {
-  const padded = String(value).padStart(6, "0");
+  const padded = String(value).padStart(7, "0");
   return padded.split("").map((digit) => Number(digit));
 }
 
@@ -92,11 +84,18 @@ function numberToWords(num) {
     return text;
   };
 
-  const thousands = Math.floor(num / 1000);
-  const remainder = num % 1000;
+  const millions = Math.floor(num / 1000000);
+  const afterMillions = num % 1000000;
+  const thousands = Math.floor(afterMillions / 1000);
+  const remainder = afterMillions % 1000;
 
   let result = "";
+  if (millions) {
+    result += `${ones[millions]} million`;
+  }
+
   if (thousands) {
+    if (result) result += " ";
     result += `${threeDigitsToWords(thousands)} thousand`;
   }
 
@@ -108,25 +107,31 @@ function numberToWords(num) {
   return result.charAt(0).toUpperCase() + result.slice(1);
 }
 
-function createPlaceCards(digits) {
-  placeCards.innerHTML = "";
+function createPlaceTable(digits) {
+  const valueCells = places
+    .map(
+      (place, index) => `
+    <div class="table-cell table-head table-c${index}" role="columnheader">
+      <p class="table-top-value">${formatNumber(place.value)}</p>
+      <p class="table-place-name">${place.label}</p>
+    </div>`
+    )
+    .join("");
 
-  places.forEach((place, index) => {
-    const digit = digits[index];
-    const total = digit * place.value;
+  const digitCells = places
+    .map(
+      (place, index) => `
+    <div class="table-cell table-digit table-c${index}" role="cell">
+      <p class="table-digit-value">${digits[index]}</p>
+      <p class="table-digit-total">${formatNumber(digits[index] * place.value)}</p>
+    </div>`
+    )
+    .join("");
 
-    const card = document.createElement("article");
-    card.className = "place-card";
-    card.style.animationDelay = `${index * 60}ms`;
-
-    card.innerHTML = `
-      <p class="place-name">${place.label}</p>
-      <p class="place-digit">${digit}</p>
-      <p class="place-value">Value: ${formatNumber(total)}</p>
-    `;
-
-    placeCards.appendChild(card);
-  });
+  placeTable.innerHTML = `
+    <div class="table-row" role="row">${valueCells}</div>
+    <div class="table-row" role="row">${digitCells}</div>
+  `;
 }
 
 function createExpandedForm(digits) {
@@ -165,7 +170,7 @@ function createBlockRows(digits) {
 }
 
 function updateExplorer(inputValue) {
-  const value = clampToRange(Number(inputValue) || 0, 0, 999999);
+  const value = clampToRange(Number(inputValue) || 0, 0, 9999999);
   numberInput.value = value;
 
   const digits = getDigits(value);
@@ -173,7 +178,7 @@ function updateExplorer(inputValue) {
   prettyNumber.textContent = formatNumber(value);
   numberWords.textContent = numberToWords(value);
 
-  createPlaceCards(digits);
+  createPlaceTable(digits);
   createExpandedForm(digits);
   createBlockRows(digits);
 }
@@ -182,123 +187,13 @@ function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function buildQuiz() {
-  const number = randomInt(1000, 999999);
-  const digits = getDigits(number);
-
-  let placeIndex = randomInt(0, places.length - 1);
-  if (digits.some((digit) => digit > 0)) {
-    let guard = 0;
-    while (digits[placeIndex] === 0 && guard < 30) {
-      placeIndex = randomInt(0, places.length - 1);
-      guard += 1;
-    }
-  }
-
-  const digit = digits[placeIndex];
-  const place = places[placeIndex];
-  const correct = digit * place.value;
-
-  const options = new Set([correct]);
-  while (options.size < 4) {
-    const randomDigit = randomInt(1, 9);
-    const randomPlace = places[randomInt(0, places.length - 1)].value;
-    options.add(randomDigit * randomPlace);
-  }
-
-  const shuffled = Array.from(options).sort(() => Math.random() - 0.5);
-
-  currentQuiz = {
-    number,
-    digit,
-    placeLabel: place.label,
-    correct,
-    options: shuffled,
-    answered: false,
-  };
-
-  renderQuiz();
-}
-
-function renderQuiz() {
-  if (!currentQuiz) return;
-
-  quizQuestion.textContent = `In ${formatNumber(currentQuiz.number)}, what is the value of the digit ${
-    currentQuiz.digit
-  } in the ${currentQuiz.placeLabel} place?`;
-
-  quizOptions.innerHTML = "";
-  currentQuiz.options.forEach((value) => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "quiz-option";
-    btn.textContent = formatNumber(value);
-    btn.setAttribute("role", "listitem");
-
-    btn.addEventListener("click", () => handleAnswer(btn, value));
-    quizOptions.appendChild(btn);
-  });
-
-  quizFeedback.textContent = "Choose an answer.";
-  quizFeedback.className = "quiz-feedback";
-  quizScore.textContent = `Score: ${score}`;
-}
-
-function createSparkles(count = 12) {
-  for (let i = 0; i < count; i += 1) {
-    const sparkle = document.createElement("span");
-    sparkle.className = "sparkle";
-    sparkle.style.left = `${randomInt(10, 90)}vw`;
-    sparkle.style.top = `${randomInt(20, 75)}vh`;
-    sparkle.style.animationDelay = `${i * 24}ms`;
-    document.body.appendChild(sparkle);
-
-    setTimeout(() => sparkle.remove(), 900);
-  }
-}
-
-function handleAnswer(button, value) {
-  if (!currentQuiz || currentQuiz.answered) return;
-
-  currentQuiz.answered = true;
-  const optionButtons = [...quizOptions.querySelectorAll("button")];
-
-  optionButtons.forEach((btn) => {
-    const buttonValue = Number(btn.textContent.replace(/,/g, ""));
-    if (buttonValue === currentQuiz.correct) {
-      btn.classList.add("correct");
-    }
-    if (btn === button && value !== currentQuiz.correct) {
-      btn.classList.add("wrong");
-    }
-    btn.disabled = true;
-  });
-
-  if (value === currentQuiz.correct) {
-    score += 1;
-    quizFeedback.textContent = "Excellent! You got it right.";
-    quizFeedback.classList.add("good");
-    createSparkles();
-  } else {
-    quizFeedback.textContent = `Not quite. Correct answer: ${formatNumber(currentQuiz.correct)}.`;
-    quizFeedback.classList.add("bad");
-  }
-
-  quizScore.textContent = `Score: ${score}`;
-}
-
 numberInput.addEventListener("input", (event) => {
   updateExplorer(event.target.value);
 });
 
 randomBtn.addEventListener("click", () => {
-  const value = randomInt(0, 999999);
+  const value = randomInt(0, 9999999);
   updateExplorer(value);
 });
 
-nextQuizBtn.addEventListener("click", () => {
-  buildQuiz();
-});
-
 updateExplorer(numberInput.value);
-buildQuiz();
