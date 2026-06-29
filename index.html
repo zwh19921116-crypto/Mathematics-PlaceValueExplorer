@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Place Value Explorer</title>
+    <meta
+      name="description"
+      content="An interactive and professional place value learning app for primary school students."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="ambient-bg">
+      <div class="blob blob-a"></div>
+      <div class="blob blob-b"></div>
+      <div class="blob blob-c"></div>
+    </div>
+
+    <header class="hero">
+      <div class="hero-content">
+        <p class="eyebrow">Mathematics Learning App</p>
+        <h1>Place Value Explorer</h1>
+        <p class="hero-subtitle">
+          Discover how each digit changes value by its position. Built for primary students with
+          friendly visuals and smart practice.
+        </p>
+
+        <div class="control-panel">
+          <label for="numberInput">Enter a number (0 to 999,999)</label>
+          <div class="input-row">
+            <input id="numberInput" type="number" min="0" max="999999" value="482731" />
+            <button id="randomBtn" type="button">Random Number</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-metric card-surface">
+        <p class="metric-label">Current Number</p>
+        <p id="prettyNumber" class="metric-value">482,731</p>
+        <p id="numberWords" class="metric-words">Four hundred eighty-two thousand seven hundred thirty-one</p>
+      </div>
+    </header>
+
+    <main>
+      <section class="content-grid">
+        <article class="card-surface" aria-labelledby="place-values-title">
+          <div class="section-head">
+            <h2 id="place-values-title">Place Value Breakdown</h2>
+            <p>See each digit and its value.</p>
+          </div>
+          <div id="placeCards" class="place-cards"></div>
+        </article>
+
+        <article class="card-surface" aria-labelledby="expanded-title">
+          <div class="section-head">
+            <h2 id="expanded-title">Expanded Form</h2>
+            <p>Read the number as a sum of place values.</p>
+          </div>
+          <p id="expandedForm" class="expanded-form">400,000 + 80,000 + 2,000 + 700 + 30 + 1</p>
+        </article>
+      </section>
+
+      <section class="card-surface" aria-labelledby="block-title">
+        <div class="section-head">
+          <h2 id="block-title">Visual Blocks</h2>
+          <p>Each block is one digit at a place.</p>
+        </div>
+        <div id="blockRows" class="block-rows"></div>
+      </section>
+
+      <section class="card-surface quiz" aria-labelledby="quiz-title">
+        <div class="section-head">
+          <h2 id="quiz-title">Quick Challenge</h2>
+          <p>Can you identify a digit's value?</p>
+        </div>
+
+        <p id="quizQuestion" class="quiz-question"></p>
+        <div id="quizOptions" class="quiz-options" role="list"></div>
+
+        <div class="quiz-footer">
+          <p id="quizFeedback" class="quiz-feedback" aria-live="polite"></p>
+          <div class="quiz-actions">
+            <p id="quizScore" class="quiz-score">Score: 0</p>
+            <button id="nextQuizBtn" type="button">Next Question</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>Built for curious learners. Practice every day and master place value.</p>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
