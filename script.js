@@ -9,9 +9,15 @@ const wholePlaces = [
 ];
 
 const decimalPlaces = [
-  { label: "Tenths", value: 0.1 },
-  { label: "Hundredths", value: 0.01 },
+  { label: "Tenths", value: 0.1, digits: 1 },
+  { label: "Hundredths", value: 0.01, digits: 2 },
+  { label: "Thousandths", value: 0.001, digits: 3 },
+  { label: "Ten Thousandths", value: 0.0001, digits: 4 },
+  { label: "Hundred Thousandths", value: 0.00001, digits: 5 },
 ];
+
+const DECIMAL_PRECISION = 5;
+const DECIMAL_SCALE = 10 ** DECIMAL_PRECISION;
 
 const numberInput = document.getElementById("numberInput");
 const randomBtn = document.getElementById("randomBtn");
@@ -35,28 +41,41 @@ function formatNumber(value, fractionDigits = 0) {
   }).format(value);
 }
 
+function formatDecimal(value) {
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: DECIMAL_PRECISION,
+  }).format(value);
+}
+
 function getCurrentPlaces() {
   return decimalToggle.checked ? decimalPlaces : wholePlaces;
 }
 
 function parseInputValue(rawValue) {
   const parsed = Number(rawValue);
-  const max = decimalToggle.checked ? 0.99 : 9999999;
+  const max = decimalToggle.checked ? 0.99999 : 9999999;
   const clamped = clampToRange(Number.isFinite(parsed) ? parsed : 0, 0, max);
-  return decimalToggle.checked ? Math.round(clamped * 100) / 100 : Math.floor(clamped);
+  return decimalToggle.checked
+    ? Math.round(clamped * DECIMAL_SCALE) / DECIMAL_SCALE
+    : Math.floor(clamped);
 }
 
 function getDigitsByMode(value) {
   if (!decimalToggle.checked) {
-    const integerPart = Math.floor(value);
-    return String(integerPart)
-      .padStart(7, "0")
+    return String(Math.floor(value))
+      .padStart(wholePlaces.length, "0")
       .split("")
       .map((digit) => Number(digit));
   }
 
-  const cents = Math.round(value * 100);
-  return [Math.floor(cents / 10), cents % 10];
+  const decimalDigits = Math.round(value * DECIMAL_SCALE)
+    .toString()
+    .padStart(DECIMAL_PRECISION, "0")
+    .split("")
+    .map((digit) => Number(digit));
+
+  return decimalDigits;
 }
 
 function twoDigitsToWords(number, ones, teens, tens) {
@@ -68,23 +87,8 @@ function twoDigitsToWords(number, ones, teens, tens) {
   return `${tens[ten]}${one ? `-${ones[one]}` : ""}`;
 }
 
-function numberToWords(value) {
-  if (value === 0 && !decimalToggle.checked) return "Zero";
-
-  const ones = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
-  const teens = [
-    "ten",
-    "eleven",
-    "twelve",
-    "thirteen",
-    "fourteen",
-    "fifteen",
-    "sixteen",
-    "seventeen",
-    "eighteen",
-    "nineteen",
-  ];
-  const tens = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
+function integerToWords(number, ones, teens, tens) {
+  if (number === 0) return "zero";
 
   const threeDigitsToWords = (num) => {
     let text = "";
@@ -103,16 +107,8 @@ function numberToWords(value) {
     return text;
   };
 
-  if (decimalToggle.checked) {
-    const cents = Math.round(value * 100);
-    if (cents === 0) return "Zero hundredths";
-    const decimalText = `${twoDigitsToWords(cents, ones, teens, tens)} hundredths`;
-    return decimalText.charAt(0).toUpperCase() + decimalText.slice(1);
-  }
-
-  const wholePart = Math.floor(value);
-  const millions = Math.floor(wholePart / 1000000);
-  const afterMillions = wholePart % 1000000;
+  const millions = Math.floor(number / 1000000);
+  const afterMillions = number % 1000000;
   const thousands = Math.floor(afterMillions / 1000);
   const remainder = afterMillions % 1000;
 
@@ -129,7 +125,35 @@ function numberToWords(value) {
     result += threeDigitsToWords(remainder);
   }
 
-  return result.charAt(0).toUpperCase() + result.slice(1);
+  return result;
+}
+
+function numberToWords(value) {
+  const ones = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
+  const teens = [
+    "ten",
+    "eleven",
+    "twelve",
+    "thirteen",
+    "fourteen",
+    "fifteen",
+    "sixteen",
+    "seventeen",
+    "eighteen",
+    "nineteen",
+  ];
+  const tens = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
+
+  if (decimalToggle.checked) {
+    const decimalInt = Math.round(value * DECIMAL_SCALE);
+    if (decimalInt === 0) return "Zero hundred-thousandths";
+    const fractionWords = integerToWords(decimalInt, ones, teens, tens);
+    return `${fractionWords.charAt(0).toUpperCase() + fractionWords.slice(1)} hundred-thousandths`;
+  }
+
+  if (value === 0) return "Zero";
+  const words = integerToWords(Math.floor(value), ones, teens, tens);
+  return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
 function createPlaceTable(digits) {
@@ -140,7 +164,7 @@ function createPlaceTable(digits) {
     .map((place, index) => {
       const colorClass = `table-c${Math.min(index, 6)}`;
       const decimalStartClass = decimalToggle.checked && index === 0 ? "decimal-start" : "";
-      const topValue = formatNumber(place.value, place.value < 1 ? 2 : 0);
+      const topValue = place.value < 1 ? formatDecimal(place.value) : formatNumber(place.value);
 
       return `
       <div class="table-cell table-head ${colorClass} ${decimalStartClass}" role="columnheader">
@@ -154,7 +178,7 @@ function createPlaceTable(digits) {
     .map((place, index) => {
       const colorClass = `table-c${Math.min(index, 6)}`;
       const decimalStartClass = decimalToggle.checked && index === 0 ? "decimal-start" : "";
-      const total = formatNumber(digits[index] * place.value, place.value < 1 ? 2 : 0);
+      const total = place.value < 1 ? formatDecimal(digits[index] * place.value) : formatNumber(digits[index] * place.value);
 
       return `
       <div class="table-cell table-digit ${colorClass} ${decimalStartClass}" role="cell">
@@ -177,7 +201,7 @@ function createExpandedForm(digits) {
   const parts = places
     .map((place, index) => digits[index] * place.value)
     .filter((entry) => entry > 0)
-    .map((entry) => formatNumber(entry, entry < 1 ? 2 : 0));
+    .map((entry) => (decimalToggle.checked ? formatNumber(entry, DECIMAL_PRECISION) : formatNumber(entry)));
 
   expandedForm.textContent = parts.length ? parts.join(" + ") : "0";
 }
@@ -189,6 +213,8 @@ function createBlockRows(digits) {
   places.forEach((place, index) => {
     const digit = digits[index];
     const total = digit * place.value;
+    const placeValueText = place.value < 1 ? formatDecimal(place.value) : formatNumber(place.value);
+    const totalText = place.value < 1 ? formatNumber(total, DECIMAL_PRECISION) : formatNumber(total);
 
     const row = document.createElement("div");
     row.className = "block-row";
@@ -203,10 +229,7 @@ function createBlockRows(digits) {
     row.innerHTML = `
       <div class="block-top">
         <p class="block-title">${place.label}: ${digit}</p>
-        <p class="block-total">${digit} x ${formatNumber(place.value, place.value < 1 ? 2 : 0)} = ${formatNumber(
-      total,
-      place.value < 1 ? 2 : 0
-    )}</p>
+        <p class="block-total">${digit} x ${placeValueText} = ${totalText}</p>
       </div>
       <div class="block-items">${cubes}</div>
     `;
@@ -217,11 +240,13 @@ function createBlockRows(digits) {
 
 function updateExplorer(rawValue) {
   const value = parseInputValue(rawValue);
-  numberInput.value = decimalToggle.checked ? value.toFixed(2) : String(Math.floor(value));
+  numberInput.value = decimalToggle.checked ? value.toFixed(DECIMAL_PRECISION) : String(Math.floor(value));
 
   const digits = getDigitsByMode(value);
 
-  prettyNumber.textContent = formatNumber(value, decimalToggle.checked ? 2 : 0);
+  prettyNumber.textContent = decimalToggle.checked
+    ? formatNumber(value, DECIMAL_PRECISION)
+    : formatNumber(value);
   numberWords.textContent = numberToWords(value);
 
   createPlaceTable(digits);
@@ -229,24 +254,24 @@ function updateExplorer(rawValue) {
   createBlockRows(digits);
 }
 
+function randomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 function syncModeUI() {
   if (decimalToggle.checked) {
-    numberInputLabel.textContent = "Enter a decimal (0.00 to 0.99)";
+    numberInputLabel.textContent = "Enter a decimal (0.00000 to 0.99999)";
     modeToggleText.textContent = "Mode: Decimal Only (switch to Whole Number)";
-    numberInput.step = "0.01";
-    numberInput.max = "0.99";
+    numberInput.step = "0.00001";
+    numberInput.max = "0.99999";
     numberInput.min = "0";
   } else {
     numberInputLabel.textContent = "Enter a whole number (0 to 9,999,999)";
-    modeToggleText.textContent = "Mode: Whole Number (switch to Decimal Only)";
+    modeToggleText.textContent = "Mode: Whole Number (switch to Decimal Only, 5 places)";
     numberInput.step = "1";
     numberInput.max = "9999999";
     numberInput.min = "0";
   }
-}
-
-function randomInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 numberInput.addEventListener("input", (event) => {
@@ -255,7 +280,7 @@ numberInput.addEventListener("input", (event) => {
 
 randomBtn.addEventListener("click", () => {
   const randomValue = decimalToggle.checked
-    ? Math.round(Math.random() * 99) / 100
+    ? Math.round(Math.random() * (DECIMAL_SCALE - 1)) / DECIMAL_SCALE
     : randomInt(0, 9999999);
   updateExplorer(randomValue);
 });
@@ -263,7 +288,7 @@ randomBtn.addEventListener("click", () => {
 decimalToggle.addEventListener("change", () => {
   const current = Number(numberInput.value) || 0;
   if (decimalToggle.checked) {
-    numberInput.value = (current % 1).toFixed(2);
+    numberInput.value = (current % 1).toFixed(DECIMAL_PRECISION);
   } else {
     numberInput.value = String(Math.floor(current));
   }
