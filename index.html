@@ -33,28 +33,31 @@
         </p>
 
         <div class="control-panel">
-          <label for="numberInput">Enter a number (0 to 9,999,999.99)</label>
+          <label for="numberInput">Enter a whole number (0 to 9,999,999)</label>
           <div class="input-row">
-            <input id="numberInput" type="number" min="0" max="9999999.99" step="0.01" value="7345621.45" />
+            <input id="numberInput" type="number" min="0" max="9999999" step="1" value="7345621" />
             <button id="randomBtn" type="button">Random Number</button>
           </div>
           <label class="mode-toggle" for="decimalToggle">
-            <input id="decimalToggle" type="checkbox" checked />
-            <span>Decimal Mode (show tenths and hundredths)</span>
+            <input id="decimalToggle" type="checkbox" />
+            <span class="switch-ui" aria-hidden="true">
+              <span class="switch-thumb"></span>
+            </span>
+            <span id="modeToggleText">Mode: Whole Number (switch to Decimal Only)</span>
           </label>
         </div>
       </div>
 
       <div class="hero-metric card-surface">
         <p class="metric-label">Current Number</p>
-        <p id="prettyNumber" class="metric-value">7,345,621.45</p>
-        <p id="numberWords" class="metric-words">Seven million three hundred forty-five thousand six hundred twenty-one and four tenths five hundredths</p>
+        <p id="prettyNumber" class="metric-value">7,345,621</p>
+        <p id="numberWords" class="metric-words">Seven million three hundred forty-five thousand six hundred twenty-one</p>
 
         <div class="metric-expanded-wrap" aria-labelledby="expanded-title">
           <div class="section-head metric-section-head">
             <h2 id="expanded-title">Expanded Form</h2>
           </div>
-          <p id="expandedForm" class="expanded-form">7,000,000 + 300,000 + 40,000 + 5,000 + 600 + 20 + 1 + 0.4 + 0.05</p>
+          <p id="expandedForm" class="expanded-form">7,000,000 + 300,000 + 40,000 + 5,000 + 600 + 20 + 1</p>
         </div>
       </div>
     </header>
